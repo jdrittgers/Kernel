@@ -14,7 +14,7 @@ export async function createEmailUser({
 	user,
 	hashedPassword,
 }: {
-	user: Pick<User, 'name' | 'email' | 'avatar'>
+	user: Pick<User, 'name' | 'email' | 'avatar' | 'username' | 'phone' | 'location' | 'businessName' | 'userType'>
 	hashedPassword: Password['hash']
 }) {
 	return db.user.create({
@@ -67,7 +67,6 @@ export async function getUserById({
 		where: { id },
 		include: {
 			password: include?.password,
-			subscription: include?.subscription,
 		},
 	})
 }
@@ -84,7 +83,22 @@ export async function getUserByEmail({
 			where: { email },
 			include: {
 				password: include?.password,
-				subscription: include?.subscription,
+			},
+		})
+}
+
+export async function getUserByUsername({
+	username,
+	include,
+}: {
+	username: User['username']
+	include?: Prisma.UserInclude
+}) {
+	if (typeof username === 'string')
+		return db.user.findUnique({
+			where: { username },
+			include: {
+				password: include?.password,
 			},
 		})
 }

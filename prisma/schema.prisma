@@ -11,12 +11,23 @@ datasource db {
 }
 
 model User {
-  id           String        @unique @default(cuid())
-  email        String?       @unique
-  name         String?
-  avatar       String?
-  password     Password?
-  subscription Subscription?
+  id       String    @unique @default(cuid())
+  email    String?   @unique
+  name     String?
+  avatar   String?
+  password Password?
+
+  // Farm bidding platform fields
+  username     String  @unique
+  phone        String?
+  location     String?
+  businessName String?
+  userType     String // "farmer" or "retailer"
+
+  // Relations
+  bidRequests          BidRequest[]
+  bids                 Bid[]
+  productRecommendations ProductRecommendation[]
 
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
@@ -29,16 +40,52 @@ model Password {
   userId String @unique
 }
 
-model Subscription {
-  id     String @id @default(cuid())
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String @unique
+model BidRequest {
+  id          String @id @default(cuid())
+  productName String
+  description String?
+  quantity    String?
+  unit        String? // e.g., "bushels", "acres", "tons"
+  status      String @default("open") // "open", "closed", "awarded"
 
-  customerId         String?  @unique
-  subscriptionId     String?
-  planId             String?
-  status             String?
-  currentPeriodStart Int?
-  currentPeriodEnd   Int?
-  cancelAtPeriodEnd  Boolean? @default(false)
+  farmer   User   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  farmerId String
+
+  bids Bid[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bid {
+  id            String  @id @default(cuid())
+  price         Float
+  deliveryDate  String
+  shippingCost  Float?
+  notes         String?
+
+  bidRequest   BidRequest @relation(fields: [bidRequestId], references: [id], onDelete: Cascade)
+  bidRequestId String
+
+  retailer   User   @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  retailerId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductRecommendation {
+  id           String @id @default(cuid())
+  productType  String // "chemical" or "seed"
+  productName  String
+  description  String?
+  price        Float
+  unit         String? // e.g., "per gallon", "per bag"
+  deliveryDate String?
+
+  retailer   User   @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  retailerId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
